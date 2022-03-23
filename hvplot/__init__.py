@@ -2,6 +2,8 @@ import sys
 import inspect
 import textwrap
 
+from functools import wraps as _wraps
+
 import param
 import panel as _pn
 import holoviews as _hv
@@ -9,6 +11,7 @@ import holoviews as _hv
 from holoviews import Store
 
 from .converter import HoloViewsConverter
+from .interactive import Interactive
 from .util import get_ipy
 from .utilities import save, show # noqa
 from .plotting import (hvPlot, hvPlotTabular,  # noqa
@@ -125,6 +128,13 @@ def _patch_doc(cls, kind):
         docstring, signature = _get_doc_and_signature(cls, kind, False)
         method.__doc__ = docstring
         method.__signature__ = signature
+
+
+@_wraps(_pn.bind)
+def bind(function, *args, **kwargs):
+    bound = _pn.bind(function, *args, **kwargs)
+    bound.interactive = lambda **kwargs: Interactive(bound, **kwargs)
+    return bound
 
 
 # Patch docstrings
